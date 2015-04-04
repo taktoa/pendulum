@@ -10,7 +10,7 @@ cabal-version:       >=1.10
 
 executable euler
   main-is:             Main.hs
-  build-depends:       base >=4.7 && <4.8, threepenny-gui, numeric-prelude
+  build-depends:       base >=4.7 && <4.8, threepenny-gui, numeric-prelude, ad, linear
   ghc-options:         -threaded
   hs-source-dirs:      src
   default-language:    Haskell2010
