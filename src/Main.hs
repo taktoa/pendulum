@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Main where
 
@@ -8,24 +8,62 @@ import           Data.Ratio
 import qualified Graphics.UI.Threepenny      as UI
 import           Graphics.UI.Threepenny.Core
 
-import           NumericPrelude
+import           Data.Foldable
+import           Data.Monoid                 (mempty)
 
+import           Linear.Matrix
+import           Numeric.AD
 
-main :: IO ()
-main = startGUI defaultConfig setup
-
+canvasSide :: Int
 canvasSide = 416
+
+center :: UI.Point
 center = (fromIntegral canvasSide / 2, fromIntegral canvasSide / 2)
+
+radian :: Floating a => a -> a
 radian angle = angle * pi / 180
 
-data SConfig = SConfig { sos :: Eq a => a -> a -> a
-                       , length :: Integer
-                       } deriving (Eq, Show, Read)
+{-
+instance Num a => Num (b -> a) where
+  f + g         = \x -> f x + g x
+  f * g         = \x -> f x * g x
+  abs f         = abs . f
+  signum f      = signum . f
+  fromInteger n = const (fromInteger n)
+  negate f      = negate . f
 
-data SState = SState { heights :: [[Double]]
-                     , time :: Integer
-                     } deriving (Eq, Show, Read)
+instance (Num a, Num b) => Num (a, b) where
+  (a, b) + (c, d) = (a + c, b + d)
+  (a, b) - (c, d) = (a - c, b - d)
+  (a, b) * (c, d) = (a * c, b * d)
+  abs (a, b)      = (abs a, abs b)
+  signum (a, b)   = (signum a, signum b)
+  fromInteger n   = (fromInteger n, fromInteger n)
+-}
+-- u[i + 1] = u[i] + u'[i]*dt
+-- u'[i + 1] = u'[i] + (laplace u)*dt
 
+--laplace :: Num a => SState v a -> (a, a) -> [a]
+f <.> g = \x -> f <$> g x
+
+laplace = trace . hessian
+
+data SConfig v a = SConfig { sos    :: v a -> a
+                           , length :: Integer
+                           }
+
+data SState v a = SState { height  :: v a -> a
+                         , height' :: a -> a -> a
+                         , time    :: Integer
+                         }
+
+main = putStrLn "hi"
+
+
+--main :: IO ()
+--main = startGUI defaultConfig setup
+
+{-
 initialCond :: SState
 
 sim :: SConfig
@@ -34,7 +72,6 @@ update :: SConfig -> SState -> SState
 
 drawPend :: SState -> UI ()
 drawPend canvas px l th m m' = do
-{-
   canvas # UI.beginPath
   canvas # UI.moveTo pos1
   canvas # UI.lineTo pos2
@@ -50,7 +87,7 @@ drawPend canvas px l th m m' = do
   canvas # UI.arc pos2 (scale m') 0 (2 * pi)
   canvas # UI.closePath
   canvas # UI.fill
--}
+
   where
     pos1 = center `add` (scale px, 0)
     pos2 = center `add` (scale px, 0) `add` pol (scale l) (90 - th)
@@ -104,3 +141,4 @@ setup window = do
   where
     update' = update sim
 
+-}
